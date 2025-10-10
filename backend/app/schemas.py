@@ -58,7 +58,7 @@ class Upload(UploadBase):
     user_id: int
     timestamp: AwareDatetime  # Ensures timezone-aware datetime
     model_status: ModelStatus
-    model_results: List[ModelResult] = []
+    model_results: List[ModelResult] = []  # should this be a list??
 
     model_config = {"from_attributes": True}
 

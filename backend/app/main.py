@@ -52,7 +52,7 @@ async def sqlalchemy_exception_handler(request, exc):
     logger.error(f"Database error: {str(exc)}")
     return {"detail": "Database error occurred"}, 500
 
-@app.post("/token", response_model=Token)
+@app.post("/token", response_model=Token)  # TODO: move to auth and make auth a router
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = auth.authenticate_user(form_data.username, form_data.password, db)
     if not user:

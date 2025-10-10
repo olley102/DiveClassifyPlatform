@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from .. import crud, schemas
 from ..database import get_db
 
-router = APIRouter()
+router = APIRouter()  # does this have to be a router??
 
 @router.get("/", response_model=list[schemas.ModelResult])
 def list_results(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
