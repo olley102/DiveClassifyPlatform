@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing_extensions import Literal
 from .. import crud, schemas, models, auth
@@ -8,8 +9,24 @@ from ..auth import get_current_user
 router = APIRouter()
 
 @router.post("/", response_model=schemas.User)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    return crud.create_user(db, user)
+async def create_user(
+    name: str = Form(...),
+    username: str = Form(...),
+    email: str = Form(...),
+    affiliation: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    user_create = schemas.UserCreate(
+        name=name,
+        username=username,
+        email=email,
+        affiliation=affiliation,
+        password=password
+    )
+    user = crud.create_user(db, user_create)
+    print(f"New user: {username} ({email})")
+    return JSONResponse(content={"message": f"User {username} created successfully"}, status_code=200)
 
 @router.get("/", response_model=list[schemas.UserPublic])
 def get_users(

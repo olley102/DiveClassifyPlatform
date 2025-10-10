@@ -137,16 +137,11 @@ class UserCreate(UserBase):
             raise ValueError("Password must be at least 8 characters")
         return v
 
-class Token(BaseModel):  # for JWT token response
-    access_token: str
-    token_type: str
-
 class User(UserBase):
     id: int
     created_at: AwareDatetime  # Ensures timezone-aware datetime
     uploads: List[Upload] = []
     hashed_password: str
-    token: Optional[Token]
 
     model_config = {"from_attributes": True}
 
@@ -155,3 +150,7 @@ class UserPublic(UserBase):
     created_at: AwareDatetime
 
     model_config = {"from_attributes": True}
+
+class Token(BaseModel):  # for JWT token response
+    access_token: str
+    token_type: str

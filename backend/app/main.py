@@ -33,7 +33,7 @@ app = FastAPI(title="Dive Data Platform API", lifespan=lifespan)
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust to specific origins in production
+    allow_origins=["http://localhost:5173"],  # Adjust to specific origins in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

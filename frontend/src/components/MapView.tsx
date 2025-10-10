@@ -11,7 +11,7 @@ interface Upload {
   filename: string;
   notes?: string;
 }
-
+  
 const MapView = () => {
   const [uploads, setUploads] = useState<Upload[]>([]);
 
