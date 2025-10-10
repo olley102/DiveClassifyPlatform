@@ -5,32 +5,15 @@ from typing_extensions import Literal
 from . import models, schemas
 from .auth import get_password_hash
 
-from sqlalchemy.sql import text
-
 def create_user(db: Session, user: schemas.UserCreate):
-    print("Database URL in crud.create_user:", db.bind.url)
     try:
-        hashed_password = get_password_hash(user.password)
-
         db_user = models.User(
-            hashed_password=hashed_password,
+            hashed_password=get_password_hash(user.password),
             **user.model_dump(exclude={"password"})
         )
-
         db.add(db_user)
-        print("Before flush in crud.create_user")
-        db.flush()
-        print("After flush, user ID:", db_user.id)
-        tables = db.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='users';")).fetchall()
-        print("Users table exists before commit:", "Yes" if tables else "No")
         db.commit()
-        print("After commit in crud.create_user")
-        user_check = db.query(models.User).filter(models.User.id == db_user.id).first()
-        print("User verification before refresh:", "Found" if user_check else "Not found")
         db.refresh(db_user)
-        print("After refresh in crud.create_user")  # Debug
-        tables = db.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='users';")).fetchall()
-        print("Users table exists after refresh:", "Yes" if tables else "No")
         return db_user
     except IntegrityError as e:
         db.rollback()
@@ -43,18 +26,30 @@ def get_users(db: Session, skip: int = 0, limit: int = 20):
     query = db.query(models.User).options(noload(models.User.uploads))
     return query.offset(skip).limit(limit).all()
 
-def get_user(db: Session, user_id: int):
+def get_user(db: Session, username: str):
+    user = db.query(models.User).filter(models.User.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+def get_user_by_id(db: Session, user_id: int):
     user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+def get_user_by_email(db: Session, email: str):
+    user = db.query(models.User).filter(models.User.email == email).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
 def update_user_role(
     db: Session,
-    user_id: int,
+    username: str,
     role: Literal["admin", "user"]
 ):
-    user = get_user(user_id, db)
+    user = get_user(username, db)
     user.role = models.UserRole(role)
     db.commit()
     db.refresh(user)
@@ -73,6 +68,8 @@ def create_upload(db: Session, upload: schemas.UploadCreate):
         return db_upload
     except IntegrityError as e:
         db.rollback()
+        if "uploads.storage_filename" in str(e):
+            raise HTTPException(status_code=400, detail="Storage filename already exists")
         raise HTTPException(status_code=400, detail="Failed to create upload due to database constraint")
     except Exception as e:
         db.rollback()

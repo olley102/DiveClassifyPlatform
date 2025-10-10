@@ -1,12 +1,12 @@
 from pydantic import BaseModel, EmailStr, AwareDatetime, field_validator
 from typing import Optional, List
-from typing_extensions import Literal
 from datetime import datetime
 from .models import UserRole, ModelStatus
+import re
 
 class ModelResultBase(BaseModel):
     label: str
-    health_score: float  # Made non-optional to match models.py
+    health_score: float
     notes: Optional[str] = None
 
     @field_validator("label")
@@ -32,6 +32,7 @@ class ModelResult(ModelResultBase):
 
 class UploadBase(BaseModel):
     filename: str
+    storage_filename: str
     lat: Optional[float] = None
     lon: Optional[float] = None
     depth: Optional[float] = None
@@ -72,6 +73,7 @@ class Upload(UploadBase):
 
 class UserBase(BaseModel):
     name: str
+    username: str
     email: EmailStr
     affiliation: Optional[str] = None
     role: UserRole = UserRole.USER
@@ -80,6 +82,22 @@ class UserBase(BaseModel):
     def validate_name_length(cls, v: str) -> str:
         if len(v) > 100:
             raise ValueError("Name must be 100 characters or less")
+        return v
+
+    @field_validator("username")
+    def validate_username(cls, v: str) -> str:
+        # check length
+        if len(v) < 3:
+            raise ValueError("Username must be at least 3 characters long")
+        if len(v) > 50:
+            raise ValueError("Username must be at most 50 characters long")
+        # check alphanumeric + underscores/hyphens
+        if not re.match(r"^[a-zA-Z0-9_-]+$", v):
+            raise ValueError("Username must contain only alphanumeric characters, underscores, or hyphens")
+        # check reserved words
+        reserved_words = {"admin", "root", "system", "user"}
+        if v.lower() in reserved_words:
+            raise ValueError(f"Username cannot be a reserved word")
         return v
 
     @field_validator("email")
@@ -119,11 +137,16 @@ class UserCreate(UserBase):
             raise ValueError("Password must be at least 8 characters")
         return v
 
+class Token(BaseModel):  # for JWT token response
+    access_token: str
+    token_type: str
+
 class User(UserBase):
     id: int
     created_at: AwareDatetime  # Ensures timezone-aware datetime
     uploads: List[Upload] = []
     hashed_password: str
+    token: Optional[Token]
 
     model_config = {"from_attributes": True}
 
@@ -132,7 +155,3 @@ class UserPublic(UserBase):
     created_at: AwareDatetime
 
     model_config = {"from_attributes": True}
-
-class Token(BaseModel):  # for JWT token response
-    access_token: str
-    token_type: str

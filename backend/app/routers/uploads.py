@@ -4,13 +4,15 @@ from .. import crud, schemas
 from ..utils.ai_processing import classify_image
 from ..database import get_db
 from ..auth import get_current_user
-import shutil, os
+import os
 from pathlib import Path
+from uuid import uuid4
 
 router = APIRouter()
-UPLOAD_DIR = "app/uploads"
+UPLOAD_DIR = Path("app/uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
 # # replace with:
-# UPLOAD_DIR = os.getenv("UPLOAD_DIR", "app/uploads")
+# UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "app/uploads"))
 
 @router.post("/", response_model=schemas.Upload)
 def create_upload(
@@ -26,22 +28,24 @@ def create_upload(
     if current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Cannot create upload for another user")
 
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-    filename = Path(file.filename).name
-    file_path = os.path.join(UPLOAD_DIR, filename)
+    # Generate unique storage filename
+    file_extension = file.filename.rsplit(".", 1)[-1] if "." in file.filename else ""
+    storage_filename = f"{uuid4().hex}.{file_extension}"
+    file_path = UPLOAD_DIR / storage_filename
     if os.path.exists(file_path):
         raise HTTPException(status_code=400, detail="File already exists")
     
+    # Save file to disk
     try:
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-    except IOError as e:
+        with file_path.open("wb") as f:
+            f.write(file.file.read())
+    except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
 
     # Create upload record
     upload_data = schemas.UploadCreate(  # align with schemas
-        filename=file.filename,
+        filename=Path(file.filename).name,
+        storage_filename=storage_filename,
         lat=lat,
         lon=lon,
         depth=depth,

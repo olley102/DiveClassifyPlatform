@@ -1,15 +1,15 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
-from . import models
+from . import crud
 from .database import get_db
 
 # JWT configuration
-SECRET_KEY = "your-secret-key"  # Replace with secure key (e.g., from env variable)
-# # i.e.
+SECRET_KEY = "651150012ad5102f030364013e22f00250d203f6f1bc721beb9c719b34f49f0c"
+# Replace with secure key (e.g., from env variable), i.e.
 # import os
 # from dotenv import load_dotenv
 # load_dotenv()
@@ -23,6 +23,15 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/token")
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
+
+def authenticate_user(username: str, password: str, db: Session = Depends(get_db)):
+    try:
+        user = crud.get_user(db, username=username)
+    except HTTPException as e:  # catch HTTPException from crud
+        return False
+    if not verify_password(password, user.hashed_password):
+        return False
+    return user
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
@@ -42,10 +51,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-def get_user_by_email(db: Session, email: str) -> models.User:  # no error handling here. Done in users.py
-    return db.query(models.User).filter(models.User.email == email).first()
-
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -53,12 +59,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
+        id = int(payload.get("sub"))
+        if id is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = get_user_by_email(email=email, db=db)
+    user = crud.get_user_by_id(user_id=id, db=db)
     if user is None:
         raise credentials_exception
     return user

@@ -1,9 +1,14 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
-from .database import Base, engine
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+from .database import Base, engine, get_db
 from .routers import users, uploads, model_results
+from .schemas import Token
+from . import auth
 import logging
 from contextlib import asynccontextmanager
+from datetime import timedelta
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -46,3 +51,18 @@ from sqlalchemy.exc import SQLAlchemyError
 async def sqlalchemy_exception_handler(request, exc):
     logger.error(f"Database error: {str(exc)}")
     return {"detail": "Database error occurred"}, 500
+
+@app.post("/token", response_model=Token)
+def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = auth.authenticate_user(form_data.username, form_data.password, db)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = auth.create_access_token(
+        data={"sub": str(user.id)}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}

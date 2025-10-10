@@ -36,7 +36,8 @@ class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
-    email = Column(String(255), unique=True, nullable=False)
+    username = Column(String(50), unique=True, index=True, nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=False)
     affiliation = Column(String(100), nullable=True)
     created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
     role = Column(Enum(UserRole), default=UserRole.USER, nullable=False)
@@ -48,7 +49,8 @@ class Upload(Base):
     __tablename__ = "uploads"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    filename = Column(String(255), index=True, nullable=False)
+    filename = Column(String(255), nullable=False)
+    storage_filename = Column(String(100), unique=True, nullable=False)
     lat = Column(Float, nullable=True)
     lon = Column(Float, nullable=True)
     timestamp = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
