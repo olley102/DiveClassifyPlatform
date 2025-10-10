@@ -49,7 +49,7 @@ class Upload(Base):
     __tablename__ = "uploads"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    filename = Column(String(255), nullable=False)
+    filename = Column(String(255), nullable=False)  # may not be needed
     storage_filename = Column(String(100), unique=True, nullable=False)
     lat = Column(Float, nullable=True)
     lon = Column(Float, nullable=True)

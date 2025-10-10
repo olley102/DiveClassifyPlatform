@@ -17,12 +17,16 @@ def create_user(db: Session, user: schemas.UserCreate):
         return db_user
     except IntegrityError as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Email already exists")
+        if "users.email" in str(e):
+            raise HTTPException(status_code=400, detail="Email already exists")
+        if "users.username" in str(e):
+            raise HTTPException(status_code=400, detail="Username already exists")
+        raise HTTPException(status_code=400, detail="Failed to create user due to database constraint")
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
 
-def get_users(db: Session, skip: int = 0, limit: int = 20):
+def list_users(db: Session, skip: int = 0, limit: int = 20):
     query = db.query(models.User).options(noload(models.User.uploads))
     return query.offset(skip).limit(limit).all()
 
@@ -75,11 +79,17 @@ def create_upload(db: Session, upload: schemas.UploadCreate):
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to create upload: {str(e)}")
 
-def get_uploads(db: Session, skip: int = 0, limit: int = 20, user_id: int = None):
+def list_uploads(db: Session, skip: int = 0, limit: int = 20, user_id: int = None):
     query = db.query(models.Upload)
     if user_id is not None:
         query = query.filter(models.Upload.user_id == user_id)
     return query.offset(skip).limit(limit).all()
+
+def get_upload(db: Session, upload_id: int):
+    upload = db.query(models.Upload).filter(models.Upload.id == upload_id).first()
+    if not upload:
+        raise HTTPException(status_code=404, detail="Upload not found")
+    return upload
 
 def create_model_result(db: Session, result: schemas.ModelResultCreate, upload_id: int):
     # Verify upload exists

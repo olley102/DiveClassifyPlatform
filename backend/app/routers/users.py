@@ -20,11 +20,16 @@ def get_users(
 ):
     if current_user.role != models.UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Admin access required")
-    return crud.get_users(db, skip=skip, limit=limit)
+    return crud.list_users(db, skip=skip, limit=limit)
 
 @router.get("/{username}", response_model=schemas.UserPublic)
 def get_user(username: str, db: Session = Depends(get_db)):
     return crud.get_user(db, username=username)
+
+@router.get("/{username}/uploads", response_model=list[schemas.Upload])
+def list_user_uploads(username: str, skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
+    user = crud.get_user(db, username=username)
+    return crud.list_uploads(db, skip=skip, limit=limit, user_id=user.id)
 
 @router.put("/{username}/role", response_model=schemas.UserPublic)
 def update_user_role(
