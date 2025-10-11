@@ -1,30 +1,47 @@
 from sqlalchemy.orm import Session, noload
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 from typing_extensions import Literal
 from . import models, schemas
 from .auth import get_password_hash
 
 def create_user(db: Session, user: schemas.UserCreate):
-    try:
-        db_user = models.User(
-            hashed_password=get_password_hash(user.password),
-            **user.model_dump(exclude={"password"})
+    errors = {}
+
+    if db.query(models.User).filter(models.User.username == user.username).first():
+        errors["username"] = "Username already exists."
+    if db.query(models.User).filter(models.User.email == user.email).first():
+        errors["email"] = "Email already exists."
+    
+    if errors:
+        return JSONResponse(
+            status_code=400,
+            content={"errors": errors}
         )
+
+    db_user = models.User(
+        hashed_password=get_password_hash(user.password),
+        **user.model_dump(exclude={"password"})
+    )
+
+    try:
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
         return db_user
     except IntegrityError as e:
         db.rollback()
-        if "users.email" in str(e):
-            raise HTTPException(status_code=400, detail="Email already exists")
-        if "users.username" in str(e):
-            raise HTTPException(status_code=400, detail="Username already exists")
-        raise HTTPException(status_code=400, detail="Failed to create user due to database constraint")
+        return JSONResponse(
+            status_code=400,
+            content={"errors": {"general": "Database integrity error, please retry."}}
+        )
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"errors": {"general": f"Failed to create user: {str(e)}"}}
+        )
 
 def list_users(db: Session, skip: int = 0, limit: int = 20):
     query = db.query(models.User).options(noload(models.User.uploads))

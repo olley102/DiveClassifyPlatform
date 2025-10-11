@@ -25,7 +25,8 @@ async def create_user(
         password=password
     )
     user = crud.create_user(db, user_create)
-    print(f"New user: {username} ({email})")
+    if isinstance(user, JSONResponse):
+        return user
     return JSONResponse(content={"message": f"User {username} created successfully"}, status_code=200)
 
 @router.get("/", response_model=list[schemas.UserPublic])

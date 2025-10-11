@@ -1,32 +1,32 @@
+import { useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import api from "../api/api";
 import strings from "../assets/strings.json";
 import type React from "react";
 
-type FieldNames = "name" | "username" | "email" | "affiliation" | "password";
+type FieldNames = "username" | "password";
 
-interface SignupFormData {
-  name: string;
+interface LoginFormData {
   username: string;
-  email: string;
-  affiliation?: string;
   password: string;
 }
 
-interface SignupFormProps {
+interface LoginFormProps {
   colors: { [keys: string]: string};
 }
 
-const SignupForm: React.FC<SignupFormProps> = ({ colors }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ colors }) => {
   const {
     register,
     handleSubmit,
-    setError,
     reset,
     formState: { errors },
-  } = useForm<SignupFormData>();
+  } = useForm<LoginFormData>();
 
-  const onSubmit: SubmitHandler<SignupFormData> = async (data) => {
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -34,43 +34,40 @@ const SignupForm: React.FC<SignupFormProps> = ({ colors }) => {
       }
     });
 
+    setLoginError(null);
+    setLoading(true);
+
     try {
-      const response = await api.post("/users/", formData, {
+      const response = await api.post("/token", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       console.log("Response:", response);
-      alert("User created successfully!");
+      alert("Logged in successfully!");
+      setLoading(false);
+      // store token
       reset();
     } catch (error: any) {
-      console.error("Signup error:", error);
+      console.error("Login error:", error);
 
-      const backendErrors = error.response?.data?.errors || {};
-
-      Object.entries(backendErrors).forEach(([field, message]) => {
-        if (field in data) {
-          setError(field as keyof SignupFormData, {
-            type: "server",
-            message: message as string,
-          });
-        } else if (field === "general") {
-          alert(message);
-        }
-      });
+      if (error.response?.status === 401) {
+        setLoginError(error.response.data.detail);
+      } else {
+        setLoginError("An unexpected error occured. Please try again.");
+      }
+    } finally {
+        setLoading(false);
     }
   };
 
   const fields: { name: FieldNames; label: string; type: string; required?: boolean }[] = [
-    { name: "name", label: "Full Name", type: "text", required: true },
     { name: "username", label: "Username", type: "text", required: true },
-    { name: "email", label: "Email Address", type: "email", required: true },
-    { name: "affiliation", label: "Affiliation", type: "text", required: false }, // not required
     { name: "password", label: "Password", type: "password", required: true },
   ];
 
   return (
     <div>
-      <h2 className="text-center text-2xl mt-4 font-bold">{strings.signupTitle}</h2>
+      <h2 className="text-center text-2xl mt-4 font-bold">{strings.loginTitle}</h2>
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="space-y-4"
@@ -87,15 +84,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ colors }) => {
             <input
               id={name}
               type={type}
-              {...register(name, {
-                ...(required && { required: `${label} is required` }),
-                ...(name === "email" && {
-                  pattern: {
-                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                    message: "Invalid email format",
-                  },
-                }),
-              })}
+              {...register(name, { required: `${label} is required` })}
               className="w-full border rounded-lg px-3 py-2 focus:outline-none"
               style={{
                 color: colors.textSecondary,
@@ -111,15 +100,23 @@ const SignupForm: React.FC<SignupFormProps> = ({ colors }) => {
           </div>
         ))}
 
+        {/* Backend error */}
+        {loginError && (
+            <p className="text-center text-sm" style={{ color: colors.error }}>
+                {loginError}
+            </p>
+        )}
+
         <button
           type="submit"
+          disabled={loading}
           className="w-full py-2 font-semibold rounded-lg text-white transition-colors duration-200"
-          style={{ backgroundColor: colors.primary }}
+          style={{ backgroundColor: (loading ? colors.primaryHover : colors.primary) }}
           onMouseOver={(e) => (
             (e.target as HTMLButtonElement).style.backgroundColor = colors.primaryHover
           )}
           onMouseOut={(e) => (
-            (e.target as HTMLButtonElement).style.backgroundColor = colors.primary
+            (e.target as HTMLButtonElement).style.backgroundColor = (loading ? colors.primaryHover : colors.primary)
           )}
         >
           Submit
@@ -129,4 +126,4 @@ const SignupForm: React.FC<SignupFormProps> = ({ colors }) => {
   );
 };
 
-export default SignupForm;
+export default LoginForm;

@@ -1,7 +1,10 @@
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from .database import Base, engine, get_db
 from .routers import users, uploads, model_results
 from .schemas import Token
@@ -51,6 +54,14 @@ from sqlalchemy.exc import SQLAlchemyError
 async def sqlalchemy_exception_handler(request, exc):
     logger.error(f"Database error: {str(exc)}")
     return {"detail": "Database error occurred"}, 500
+
+@app.exception_handler(ValidationError)
+async def pydantic_validation_exception_handler(request, exc):
+    errors = {}
+    for err in exc.errors():
+        field = err["loc"][-1]
+        errors[field] = err["msg"].replace("Value error, ", "")
+    return JSONResponse(status_code=422, content={"errors": errors})
 
 @app.post("/token", response_model=Token)  # TODO: move to auth and make auth a router
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):

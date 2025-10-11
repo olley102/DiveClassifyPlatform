@@ -1,0 +1,12 @@
+{
+  "primary": "#1D4ED8",
+  "primaryHover": "#2563EB",
+  "primaryLight": "#3B82F6",
+  "primaryDark": "#1E40AF",
+  "background": "#E5E7EB",
+  "cardBackground": "#F9FAFB",
+  "textPrimary": "#111827",
+  "textSecondary": "#4B5563",
+  "error": "#DC2626",
+  "success": "#16A34A"
+}
