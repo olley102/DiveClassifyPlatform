@@ -13,7 +13,6 @@ async def create_user(
     name: str = Form(...),
     username: str = Form(...),
     email: str = Form(...),
-    affiliation: str = Form(...),
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
@@ -21,7 +20,6 @@ async def create_user(
         name=name,
         username=username,
         email=email,
-        affiliation=affiliation,
         password=password
     )
     user = crud.create_user(db, user_create)

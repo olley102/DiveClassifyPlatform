@@ -1,10 +1,11 @@
 // import MapView from './components/MapView';
 // import UploadForm from './components/UploadForm';
 // import UserDashboard from './components/UserDashboard';
-import colors from "./assets/colors.json";
+import { Routes, Route, Navigate } from "react-router-dom";
 import SignupForm from "./components/SignupForm";
-import strings from "./assets/strings.json";
 import LoginForm from "./components/LoginForm";
+import strings from "./assets/strings.json";
+import colors from "./assets/colors.json";
 
 function App() {
   return (
@@ -15,7 +16,7 @@ function App() {
       }}
     >
       <div
-        className="w-full max-w-md shadow-lg rounded-2xl p-8"
+        className="w-full max-w-md shadow-lg rounded-2xl p-8 mx-4 transition-all duration-300 ease-in-out"
         style={{ backgroundColor: colors.cardBackground }}
       >
         <h1
@@ -24,8 +25,11 @@ function App() {
         >
           {strings.appName}
         </h1>
-        <SignupForm colors={colors} />
-        <LoginForm colors={colors} />
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="/login" element={<LoginForm colors={colors} />} />
+          <Route path="/signup" element={<SignupForm colors={colors} />} />
+        </Routes>
       </div>
     </div>
   );

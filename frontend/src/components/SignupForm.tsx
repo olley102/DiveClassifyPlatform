@@ -1,15 +1,15 @@
+import { useNavigate } from "react-router-dom";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import api from "../api/api";
 import strings from "../assets/strings.json";
 import type React from "react";
 
-type FieldNames = "name" | "username" | "email" | "affiliation" | "password";
+type FieldNames = "name" | "username" | "email" | "password";
 
 interface SignupFormData {
   name: string;
   username: string;
   email: string;
-  affiliation?: string;
   password: string;
 }
 
@@ -18,6 +18,8 @@ interface SignupFormProps {
 }
 
 const SignupForm: React.FC<SignupFormProps> = ({ colors }) => {
+  const navigate = useNavigate();
+  
   const {
     register,
     handleSubmit,
@@ -64,68 +66,78 @@ const SignupForm: React.FC<SignupFormProps> = ({ colors }) => {
     { name: "name", label: "Full Name", type: "text", required: true },
     { name: "username", label: "Username", type: "text", required: true },
     { name: "email", label: "Email Address", type: "email", required: true },
-    { name: "affiliation", label: "Affiliation", type: "text", required: false }, // not required
     { name: "password", label: "Password", type: "password", required: true },
   ];
 
   return (
-    <div>
-      <h2 className="text-center text-2xl mt-4 font-bold">{strings.signupTitle}</h2>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="space-y-4"
-      >
-        {fields.map(({ name, label, type, required }) => (
-          <div key={name}>
-            <label
-              htmlFor={name}
-              className="block font-medium mb-1"
-              style={{ color: colors.textPrimary }}
-            >
-              {label}
-            </label>
-            <input
-              id={name}
-              type={type}
-              {...register(name, {
-                ...(required && { required: `${label} is required` }),
-                ...(name === "email" && {
-                  pattern: {
-                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                    message: "Invalid email format",
-                  },
-                }),
-              })}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none"
-              style={{
-                color: colors.textSecondary,
-                borderColor: errors[name] ? colors.error : colors.primaryLight,
-                backgroundColor: "#fff"
-              }}
-            />
-            {errors[name] && (
-              <p className="mt-1 text-sm" style={{ color: colors.error }}>
-                {errors[name]?.message}
-              </p>
-            )}
-          </div>
-        ))}
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-4"
+    >
+      {fields.map(({ name, label, type, required }) => (
+        <div key={name}>
+          <label
+            htmlFor={name}
+            className="block font-medium mb-1"
+            style={{ color: colors.textPrimary }}
+          >
+            {label}
+          </label>
+          <input
+            id={name}
+            type={type}
+            {...register(name, {
+              ...(required && { required: `${label} is required` }),
+              ...(name === "email" && {
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Invalid email format",
+                },
+              }),
+            })}
+            className="w-full border rounded-lg px-3 py-2 focus:outline-none"
+            style={{
+              color: colors.textSecondary,
+              borderColor: errors[name] ? colors.error : colors.primaryLight,
+              backgroundColor: "#fff"
+            }}
+          />
+          {errors[name] && (
+            <p className="mt-1 text-sm" style={{ color: colors.error }}>
+              {errors[name]?.message}
+            </p>
+          )}
+        </div>
+      ))}
 
-        <button
-          type="submit"
-          className="w-full py-2 font-semibold rounded-lg text-white transition-colors duration-200"
-          style={{ backgroundColor: colors.primary }}
-          onMouseOver={(e) => (
-            (e.target as HTMLButtonElement).style.backgroundColor = colors.primaryHover
-          )}
-          onMouseOut={(e) => (
-            (e.target as HTMLButtonElement).style.backgroundColor = colors.primary
-          )}
-        >
-          Submit
-        </button>
-      </form>
-    </div>
+      <button
+        type="submit"
+        className="w-full py-2 font-semibold rounded-lg text-white transition-colors duration-200"
+        style={{ backgroundColor: colors.primary }}
+        onMouseOver={(e) => (
+          (e.target as HTMLButtonElement).style.backgroundColor = colors.primaryHover
+        )}
+        onMouseOut={(e) => (
+          (e.target as HTMLButtonElement).style.backgroundColor = colors.primary
+        )}
+      >
+        Submit
+      </button>
+
+      <div className="text-center mt-3">
+        <span className="text-sm" style={{ color: colors.textSecondary }}>
+          Already have an account?{" "}
+          <button
+            type="button"
+            onClick={() => navigate("/login")}
+            className="font-medium hover:underline"
+            style={{ color: colors.primary }}
+          >
+            Log in
+          </button>
+        </span>
+      </div>
+    </form>
   );
 };
 
