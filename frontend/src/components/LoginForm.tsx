@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
+import { useEffect } from "react";
 import api from "../api/api";
 import strings from "../assets/strings.json";
 import type React from "react";
@@ -18,6 +19,11 @@ interface LoginFormProps {
 
 const LoginForm: React.FC<LoginFormProps> = ({ colors }) => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) navigate("/map");
+  }, [navigate]);
 
   const {
     register,
@@ -49,10 +55,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ colors }) => {
       localStorage.setItem("token", token);
 
       console.log("Response:", response);
-      // alert("Logged in successfully!");
       setLoading(false);
       // store token
       reset();
+      navigate("/map")
     } catch (error: any) {
       console.error("Login error:", error);
 
