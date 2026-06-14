@@ -37,9 +37,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ colors }) => {
     });
 
     try {
-      const response = await api.post("/users/", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const response = await api.post("/users/", formData);
 
       console.log("Response:", response);
       alert("User created successfully!");

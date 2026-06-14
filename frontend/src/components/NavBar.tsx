@@ -23,7 +23,7 @@ const NavBar = () => {
                     <button
                         key={item.path}
                         onClick={() => navigate(item.path)}
-                        className="flex-1 flex flex-col items-center gap-0.5 text-xs font-medium transition-all p-3"
+                        className="flex-1 flex flex-col items-center gap-0.5 text-xs font-medium transition-all p-2"
                         style={{
                             color: isActive ? colors.primary : colors.textSecondary
                         }}

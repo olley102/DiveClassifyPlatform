@@ -1,40 +1,157 @@
-import { useState } from 'react';
-import api from '../api/api';
+import { useState } from "react";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import api from "../api/api";
+import type React from "react";
 
-const UploadForm = () => {
-  const [file, setFile] = useState<File | null>(null);
-  const [lat, setLat] = useState('');
-  const [lon, setLon] = useState('');
-  const [userId, setUserId] = useState('');
+interface UploadFormData {
+  file: FileList;
+  lat: string;
+  lon: string;
+}
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!file) return alert('Please select a file');
+interface UploadFormProps {
+  colors?: { [keys: string]: string };
+}
+
+const UploadForm: React.FC<UploadFormProps> = ({ colors = {} }) => {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<UploadFormData>();
+
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const onSubmit: SubmitHandler<UploadFormData> = async (data) => {
+    setUploadError(null);
+    setSuccessMessage(null);
+    setLoading(true);
 
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('lat', lat);
-    formData.append('lon', lon);
-    formData.append('user_id', userId);
+    formData.append("file", data.file[0]);
+    formData.append("lat", data.lat);
+    formData.append("lon", data.lon);
 
     try {
-      await api.post('/uploads/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      alert('Upload successful!');
-    } catch (error) {
-      console.error(error);
-      alert('Upload failed');
+      await api.post("/uploads/", formData);
+
+      setSuccessMessage("Upload successful!");
+      reset();
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      setUploadError("Upload failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const fields: {
+    name: keyof Omit<UploadFormData, "file">;
+    label: string;
+    type: string;
+    placeholder?: string;
+    required?: boolean;
+  }[] = [
+    { name: "lat", label: "Latitude", type: "text", required: true },
+    { name: "lon", label: "Longitude", type: "text", required: true }
+  ];
+
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3 max-w-md mx-auto mt-6">
-      <input type="file" onChange={e => setFile(e.target.files?.[0] || null)} />
-      <input type="text" placeholder="Latitude" value={lat} onChange={e => setLat(e.target.value)} />
-      <input type="text" placeholder="Longitude" value={lon} onChange={e => setLon(e.target.value)} />
-      <input type="text" placeholder="User ID" value={userId} onChange={e => setUserId(e.target.value)} />
-      <button type="submit">Upload</button>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* File input */}
+      <div>
+        <label
+          htmlFor="file"
+          className="block font-medium mb-1"
+          style={{ color: colors.textPrimary }}
+        >
+          File
+        </label>
+        <input
+          id="file"
+          type="file"
+          {...register("file", { required: "File is required" })}
+          className="w-full border rounded-lg px-3 py-2 focus:outline-none"
+          style={{
+            borderColor: errors.file ? colors.error : colors.primaryLight,
+            backgroundColor: "#fff",
+          }}
+        />
+        {errors.file && (
+          <p className="mt-1 text-sm" style={{ color: colors.error }}>
+            {errors.file.message}
+          </p>
+        )}
+      </div>
+
+      {/* Text fields */}
+      {fields.map(({ name, label, type, placeholder, required }) => (
+        <div key={name}>
+          <label
+            htmlFor={name}
+            className="block font-medium mb-1"
+            style={{ color: colors.textPrimary }}
+          >
+            {label}
+          </label>
+          <input
+            id={name}
+            type={type}
+            placeholder={placeholder || label}
+            {...register(name, {
+              ...(required && { required: `${label} is required` }),
+            })}
+            className="w-full border rounded-lg px-3 py-2 focus:outline-none"
+            style={{
+              color: colors.textSecondary,
+              borderColor: errors[name] ? colors.error : colors.primaryLight,
+              backgroundColor: "#fff",
+            }}
+          />
+          {errors[name] && (
+            <p className="mt-1 text-sm" style={{ color: colors.error }}>
+              {errors[name]?.message}
+            </p>
+          )}
+        </div>
+      ))}
+
+      {/* Error / success messages */}
+      {uploadError && (
+        <p className="text-center text-sm" style={{ color: colors.error }}>
+          {uploadError}
+        </p>
+      )}
+      {successMessage && (
+        <p className="text-center text-sm" style={{ color: colors.success }}>
+          {successMessage}
+        </p>
+      )}
+
+      {/* Submit button */}
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full py-2 font-semibold rounded-lg text-white transition-colors duration-200"
+        style={{
+          backgroundColor: loading
+            ? colors.primaryHover
+            : colors.primary || "#2563eb",
+        }}
+        onMouseOver={(e) =>
+          ((e.target as HTMLButtonElement).style.backgroundColor =
+            colors.primaryHover)
+        }
+        onMouseOut={(e) =>
+          ((e.target as HTMLButtonElement).style.backgroundColor =
+            loading ? colors.primaryLight : colors.primary)
+        }
+      >
+        {loading ? "Uploading..." : "Upload"}
+      </button>
     </form>
   );
 };

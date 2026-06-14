@@ -47,9 +47,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ colors }) => {
     setLoading(true);
 
     try {
-      const response = await api.post("/token", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const response = await api.post("/token", formData);
 
       const token = response.data.access_token;
       localStorage.setItem("token", token);
@@ -94,7 +92,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ colors }) => {
           <input
             id={name}
             type={type}
-            {...register(name, { required: `${label} is required` })}
+            {...register(name, {
+              ...(required && {required: `${label} is required` })
+            })}
             className="w-full border rounded-lg px-3 py-2 focus:outline-none"
             style={{
               color: colors.textSecondary,

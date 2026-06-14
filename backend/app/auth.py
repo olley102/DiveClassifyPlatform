@@ -19,7 +19,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # OAuth2 scheme
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
@@ -59,12 +59,15 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        id = int(payload.get("sub"))
-        if id is None:
+        username = payload.get("sub")
+        if username is None:
+            print("username none error")
             raise credentials_exception
     except JWTError:
+        print("jwterror")
         raise credentials_exception
-    user = crud.get_user_by_id(user_id=id, db=db)
+    user = crud.get_user(username=username, db=db)
     if user is None:
+        print("user none error")
         raise credentials_exception
     return user

@@ -11,7 +11,7 @@ interface Upload {
   filename: string;
   notes?: string;
 }
-  
+
 const MapView = () => {
   const [uploads, setUploads] = useState<Upload[]>([]);
 
@@ -20,8 +20,8 @@ const MapView = () => {
   }, []);
 
   return (
-    <div className="w-full h-[600px]">
-      <MapContainer center={[50, -4]} zoom={6} className="h-full w-full">
+    <div className="w-full h-full">
+      <MapContainer center={[50, -4]} zoom={6} className="h-full w-full" style={{minHeight: 0}}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="© OpenStreetMap"
@@ -30,7 +30,11 @@ const MapView = () => {
           <Marker
             key={u.id}
             position={[u.lat, u.lon]}
-            icon={L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png' })}
+            icon={L.icon({
+              iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+              iconSize: [25, 41],
+              iconAnchor: [12, 41]
+            })}
           >
             <Popup>
               <strong>{u.filename}</strong>
