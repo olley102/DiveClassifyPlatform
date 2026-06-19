@@ -4,6 +4,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { useEffect } from "react";
 import api from "../api/api";
 import strings from "../assets/strings.json";
+import colors from "../assets/colors.json"
 import type React from "react";
 
 type FieldNames = "username" | "password";
@@ -13,16 +14,12 @@ interface LoginFormData {
   password: string;
 }
 
-interface LoginFormProps {
-  colors: { [keys: string]: string};
-}
-
-const LoginForm: React.FC<LoginFormProps> = ({ colors }) => {
+const LoginForm = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) navigate("/map");
+    if (token) navigate("/dashboard");
   }, [navigate]);
 
   const {
@@ -56,7 +53,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ colors }) => {
       setLoading(false);
       // store token
       reset();
-      navigate("/map")
+      navigate("/dashboard")
     } catch (error: any) {
       console.error("Login error:", error);
 
@@ -78,7 +75,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ colors }) => {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-4"
+      className="flex flex-col gap-4"
     >
       {fields.map(({ name, label, type, required }) => (
         <div key={name}>
@@ -99,7 +96,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ colors }) => {
             style={{
               color: colors.textSecondary,
               borderColor: errors[name] ? colors.error : colors.primaryLight,
-              backgroundColor: "#fff"
+              backgroundColor: colors.cardBackground
             }}
           />
           {errors[name] && (

@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import api from "../api/api";
 import strings from "../assets/strings.json";
+import colors from "../assets/colors.json";
 import type React from "react";
 
 type FieldNames = "name" | "username" | "email" | "password";
@@ -13,11 +14,7 @@ interface SignupFormData {
   password: string;
 }
 
-interface SignupFormProps {
-  colors: { [keys: string]: string};
-}
-
-const SignupForm: React.FC<SignupFormProps> = ({ colors }) => {
+const SignupForm = () => {
   const navigate = useNavigate();
   
   const {
@@ -70,7 +67,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ colors }) => {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-4"
+      className="flex flex-col gap-4"
     >
       {fields.map(({ name, label, type, required }) => (
         <div key={name}>
@@ -97,7 +94,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ colors }) => {
             style={{
               color: colors.textSecondary,
               borderColor: errors[name] ? colors.error : colors.primaryLight,
-              backgroundColor: "#fff"
+              backgroundColor: colors.cardBackground
             }}
           />
           {errors[name] && (

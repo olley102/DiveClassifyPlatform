@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import api from "../api/api";
 import type React from "react";
+import colors from "../assets/colors.json"
 
 interface UploadFormData {
   file: FileList;
@@ -9,11 +10,7 @@ interface UploadFormData {
   lon: string;
 }
 
-interface UploadFormProps {
-  colors?: { [keys: string]: string };
-}
-
-const UploadForm: React.FC<UploadFormProps> = ({ colors = {} }) => {
+const UploadForm = () => {
   const {
     register,
     handleSubmit,

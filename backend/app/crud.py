@@ -3,8 +3,16 @@ from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from typing_extensions import Literal
+from passlib.context import CryptContext
 from . import models, schemas
-from .auth import get_password_hash
+
+# Password hashing
+pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
+
+def get_password_hash(password: str) -> str:  # placed in crud to avoid circular import with auth
+    if len(password.encode("utf-8")) > 72:
+        raise ValueError("Password must not exceed 72 bytes")
+    return pwd_context.hash(password)
 
 def create_user(db: Session, user: schemas.UserCreate):
     errors = {}
@@ -108,28 +116,8 @@ def get_upload(db: Session, upload_id: int):
         raise HTTPException(status_code=404, detail="Upload not found")
     return upload
 
-def create_model_result(db: Session, result: schemas.ModelResultCreate, upload_id: int):
-    # Verify upload exists
-    if not db.query(models.Upload).filter(models.Upload.id == upload_id).first():
-        raise HTTPException(status_code=404, detail="Upload not found")
-    
-    try:
-        db_result = models.ModelResult(**result.model_dump(), upload_id=upload_id)
-        db.add(db_result)
-        db.commit()
-        db.refresh(db_result)
-        return db_result
-    except IntegrityError as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail="Failed to create model result due to database constraint")
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to create model result: {str(e)}")
-
 def update_upload(db: Session, upload_id: int, upload: schemas.UploadBase):
-    db_upload = db.query(models.Upload).filter(models.Upload.id == upload_id).first()
-    if not db_upload:
-        raise HTTPException(status_code=404, detail="Upload not found")
+    db_upload = get_upload(db, upload_id)
     
     try:
         for key, value in upload.model_dump(exclude_unset=True).items():
@@ -141,10 +129,21 @@ def update_upload(db: Session, upload_id: int, upload: schemas.UploadBase):
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to update upload: {str(e)}")
 
+def update_upload_label(db: Session, upload_id: int, upload_data: schemas.UpdateUploadLabel):
+    db_upload = get_upload(db, upload_id)
+
+    try:
+        for key, value in upload_data.model_dump(exclude_unset=True).items():
+            setattr(db_upload, key, value)
+        db.commit()
+        db.refresh(db_upload)
+        return db_upload
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to update upload: {str(e)}")
+
 def delete_upload(db: Session, upload_id: int):
-    db_upload = db.query(models.Upload).filter(models.Upload.id == upload_id).first()
-    if not db_upload:
-        raise HTTPException(status_code=404, detail="Upload not found")
+    db_upload = get_upload(db, upload_id)
     
     try:
         db.delete(db_upload)
@@ -153,13 +152,3 @@ def delete_upload(db: Session, upload_id: int):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to delete upload: {str(e)}")
-
-def list_results(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.ModelResult).offset(skip).limit(limit).all()
-
-def get_results_for_upload(db: Session, upload_id: int):
-    # Verify upload exists
-    if not db.query(models.Upload).filter(models.Upload.id == upload_id).first():
-        raise HTTPException(status_code=404, detail="Upload not found")
-    
-    return db.query(models.ModelResult).filter_by(upload_id=upload_id).all()

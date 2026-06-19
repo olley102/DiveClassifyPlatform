@@ -18,16 +18,7 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png"}
 MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 
-@router.post("/", response_model=schemas.Upload)
-def create_upload(
-    lat: float = Form(None),
-    lon: float = Form(None),
-    depth: float = Form(None),
-    file: UploadFile = File(...),
-    notes: str = Form(None),
-    db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_user)
-):
+def validate_upload_file_and_store(file: UploadFile):
     # Validate MIME type
     mime_type, _ = guess_type(file.filename)
     if mime_type not in ALLOWED_MIME_TYPES:
@@ -39,7 +30,7 @@ def create_upload(
     file.file.seek(0)  # reset to beginning
     if file_size > MAX_FILE_SIZE_BYTES:
         raise HTTPException(status_code=400, detail=f"File too large. Max 10 MB allowed. Got: {file_size / (1024*1024):.2f} MB")
-
+    
     # Generate unique storage filename
     file_extension = file.filename.rsplit(".", 1)[-1] if "." in file.filename else ""
     if file_extension not in {"jpg", "jpeg", "png"}:
@@ -55,6 +46,20 @@ def create_upload(
             f.write(file.file.read())
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
+    
+    return storage_filename
+
+@router.post("/", response_model=schemas.Upload)
+def create_upload(
+    lat: float = Form(None),
+    lon: float = Form(None),
+    depth: float = Form(None),
+    file: UploadFile = File(...),
+    notes: str = Form(None),
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(get_current_user)
+):
+    storage_filename = validate_upload_file_and_store(file)
 
     # Create upload record
     upload_data = schemas.UploadCreate(  # align with schemas
@@ -71,14 +76,13 @@ def create_upload(
 
 def run_classification(upload_id: int, file_path: str, db: Session = Depends(get_db)):
     result = classify_image(file_path)
-    result_data = schemas.ModelResultCreate(
-        label=result["label"],
-        health_score=result["health_score"],
-        notes="Auto-classified"
+    result_data = schemas.UpdateUploadLabel(
+        label_type="model_defined",
+        **result
     )
-    return crud.create_model_result(db, result=result_data, upload_id=upload_id)
+    return crud.update_upload(db, upload_id=upload_id, upload=result_data)
 
-@router.put("/{upload_id}/classify", response_model=schemas.ModelResult)
+@router.put("/{upload_id}/classify", response_model=schemas.Upload)
 def classify_upload(upload_id: int, db: Session = Depends(get_db)):
     upload = crud.get_upload(db, upload_id=upload_id)
     file_path = UPLOAD_DIR / upload.storage_filename

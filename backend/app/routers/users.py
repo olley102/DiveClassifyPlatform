@@ -27,7 +27,7 @@ async def create_user(
         return user
     return JSONResponse(content={"message": f"User {username} created successfully"}, status_code=200)
 
-@router.get("/", response_model=list[schemas.UserPublic])
+@router.get("/", response_model=list[schemas.User])
 def get_users(
     skip: int = 0,
     limit: int = 20,
@@ -38,7 +38,7 @@ def get_users(
         raise HTTPException(status_code=403, detail="Admin access required")
     return crud.list_users(db, skip=skip, limit=limit)
 
-@router.get("/{username}", response_model=schemas.UserPublic)
+@router.get("/{username}", response_model=schemas.User)
 def get_user(username: str, db: Session = Depends(get_db)):
     return crud.get_user(db, username=username)
 
@@ -47,7 +47,7 @@ def list_user_uploads(username: str, skip: int = 0, limit: int = 20, db: Session
     user = crud.get_user(db, username=username)
     return crud.list_uploads(db, skip=skip, limit=limit, user_id=user.id)
 
-@router.put("/{username}/role", response_model=schemas.UserPublic)
+@router.put("/{username}/role", response_model=schemas.User)
 def update_user_role(
     username: str,
     role: Literal["admin", "user"],

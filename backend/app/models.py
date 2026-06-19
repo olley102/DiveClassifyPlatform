@@ -6,11 +6,16 @@ from .database import Base
 import enum
 
 # Define enum for model_status
-class ModelStatus(enum.Enum):
+class LabelType(enum.Enum):
+    USER_DEFINED = "user_defined"
+    MODEL_DEFINED = "model_defined"
+    NO_LABEL = "no_label"
+
+class VerificationStatus(enum.Enum):
     PENDING = "pending"
-    PROCESSING = "processing"
-    COMPLETED = "completed"
-    FAILED = "failed"
+    CERTAIN = "certain"
+    FLAGGED = "flagged"
+    REJECTED = "rejected"
 
 class UTCDateTime(TypeDecorator):
     impl = DateTime
@@ -56,17 +61,9 @@ class Upload(Base):
     timestamp = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
     depth = Column(Float, nullable=True)
     notes = Column(Text, nullable=True)
-    model_status = Column(Enum(ModelStatus), default=ModelStatus.PENDING)
+    verification_status = Column(Enum(VerificationStatus), default=VerificationStatus.PENDING)
+    label_type = Column(Enum(LabelType), default=LabelType.NO_LABEL)
+    label = Column(String(50), nullable=True)
+    model_confidence = Column(Float, nullable=True)
 
     user = relationship("User", back_populates="uploads")
-    model_results = relationship("ModelResult", back_populates="upload", cascade="all, delete-orphan")
-
-class ModelResult(Base):
-    __tablename__ = "model_results"
-    id = Column(Integer, primary_key=True)
-    upload_id = Column(Integer, ForeignKey("uploads.id", ondelete="CASCADE"))
-    label = Column(String(50), nullable=False)
-    health_score = Column(Float, nullable=False)
-    notes = Column(Text, nullable=True)
-
-    upload = relationship("Upload", back_populates="model_results")

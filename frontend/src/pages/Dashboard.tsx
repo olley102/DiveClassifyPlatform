@@ -1,29 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { Image } from "lucide-react";
-import MainLayout from "../layout/MainLayout";
 import colors from "../assets/colors.json";
 
 const Dashboard = () => {
   const navigate = useNavigate();
 
-  const header = <h2 className="text-xl font-semibold">My Uploads</h2>;
-
-  const floatingButton = (
-    <button
-      className="rounded-full p-4 shadow-md transition-transform hover:scale-105"
-      style={{ backgroundColor: colors.primary, color: '#fff' }}
-      onClick={() => {navigate("/upload")}}
-    >
-      <Image size={24} />
-    </button>
-  );
-
-  return (
-    <MainLayout header={header} floatingButton={floatingButton}>
-      <p className="text-center text-sm text-gray-600 mt-4">
-        Your uploaded dive photos will appear here 📸
-      </p>
-    </MainLayout>
+  return (  // TODO: Design Dashboard UI
+    <p className="text-center text-sm text-gray-600 mt-4">
+      Your uploaded dive photos will appear here 📸
+    </p>
   );
 };
 

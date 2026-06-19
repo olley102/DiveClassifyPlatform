@@ -20,8 +20,8 @@ const MapView = () => {
   }, []);
 
   return (
-    <div className="w-full h-full">
-      <MapContainer center={[50, -4]} zoom={6} className="h-full w-full" style={{minHeight: 0}}>
+    <div className="w-full h-full min-h-0 flex flex-col flex-1">
+      <MapContainer center={[50, -4]} zoom={6} className="h-full w-full">
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="© OpenStreetMap"

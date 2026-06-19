@@ -1,128 +1,136 @@
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import LoginForm from "./components/LoginForm";
-import SignupForm from "./components/SignupForm";
 import ProtectedRoute from "./components/ProtectedRoute";
-import AuthLayout from "./layout/AuthLayout";
-import Map from "./pages/Map";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import MapPage from "./pages/MapPage";
 import Dashboard from "./pages/Dashboard";
-import Discover from "./pages/Discover";
 import UploadPage from "./pages/UploadPage"
 import strings from "./assets/strings.json";
 import colors from "./assets/colors.json";
-import { LogOut } from "lucide-react";
+import { use } from "react";
+
+const LoginButton = () => {
+  const navigate = useNavigate();
+  const handleLogin = () => {
+    navigate("/login", {replace: true});
+  };
+
+  return (
+    <button
+      onClick={handleLogin}
+      className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+      style={{ color: colors.textSecondary }}
+    >
+      <p>Login</p>
+    </button>
+  );
+};
+
+const SignupButton = () => {
+  const navigate = useNavigate();
+  const handleSignup = () => {
+    navigate("/signup", {replace: true});
+  };
+
+  return (
+    <button
+      onClick={handleSignup}
+      className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+      style={{ color: colors.textSecondary }}
+    >
+      <p>Sign Up</p>
+    </button>
+  )
+}
 
 const LogoutButton = () => {
   const navigate = useNavigate();
-
   const handleLogout = () => {
     localStorage.removeItem("token");
-    navigate("/login", { replace: true });
+    navigate("/map", { replace: true });
   };
 
   return (
     <button
       onClick={handleLogout}
-      className="p-2 rounded-full hover:bg-red-100 transition-colors"
-      title="Logout"
+      className="p-2 rounded-md hover:bg-red-100 transition-colors"
       style={{ color: colors.error }}
     >
-      <LogOut size={20} />
+      <p>Logout</p>
     </button>
   );
 };
 
+const TitleButton = () => {
+  const navigate = useNavigate();
+
+  const handleHome = () => {
+    navigate("/map", {replace: true});
+  }
+
+  return (
+    <button
+      onClick={handleHome}
+      className="p-1"
+    >
+      <h1
+        className="text-3xl font-extrabold"
+        style={{ color: colors.primary }}
+      >
+        {strings.appName}
+      </h1>
+    </button>
+  )
+}
+
 function App() {
   return (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      style={{
-        background: `linear-gradient(135deg, ${colors.background}, ${colors.primaryLight}20)`
-      }}
-    >
-      {/* Outer card */}
+    <div className="w-full h-screen flex flex-col overflow-hidden">
+      {/* Header with app name + nav buttons */}
       <div
-        className="w-full max-w-md md:max-w-3xl h-[90vh] flex flex-col shadow-lg rounded-2xl mx-4 overflow-hidden"
+        className="flex items-center justify-between px-6 py-4 flex-none shadow-lg"
         style={{ backgroundColor: colors.cardBackground }}
       >
-        {/* Header with app name + logout button */}
-        <div className="flex items-center justify-between px-6 py-4 flex-none">
-          <h1
-            className="text-3xl font-extrabold"
-            style={{ color: colors.primary }}
-          >
-            {strings.appName}
-          </h1>
+        <div className="flex-none">
+          <TitleButton />
+        </div>
 
+        <div className="flex-1 flex justify-end items-center">
           <Routes>
-            <Route
-              path="/login"
-              element={null}
-            />
-            <Route
-              path="/signup"
-              element={null}
-            />
-            <Route
-              path="/*"
-              element={<LogoutButton />}
-            />
+            <Route path="/login" element={<SignupButton />} />
+            <Route path="/signup" element={<LoginButton />} />
+            <Route path="/map" element={<LoginButton />} />
+            <Route path="/*" element={<LogoutButton />} />
           </Routes>
         </div>
-        
-        {/* Routes container */}
-        <div className="flex-grow flex flex-col min-h-0">
-          <Routes>
-            <Route path="/" element={ <Navigate to="/login" />} />
-            <Route path="/login"
-              element={
-                <AuthLayout>
-                  <LoginForm colors={colors} />
-                </AuthLayout>
-              }
-            />
-            <Route path="/signup"
-              element={
-                <AuthLayout>
-                  <SignupForm colors={colors} />
-                </AuthLayout>
-              }
-            />
+      </div>
+    
+      {/* Routes container */}
+      <div className="w-full flex-1 min-h-0 flex flex-col justfiy-center items-center">
+        <Routes>
+          <Route path="/" element={ <Navigate to="/map" />} />
+          <Route path="/map" element={ <MapPage /> } />
+          <Route path="/login" element={ <LoginPage /> } />
+          <Route path="/signup" element={ <SignupPage /> } />
 
-            {/* Protected pages */}
-            <Route
-              path="/map"
-              element={
-                <ProtectedRoute>
-                  <Map />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/discover"
-              element={
-                <ProtectedRoute>
-                  <Discover />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/upload"
-              element={
-                <ProtectedRoute>
-                  <UploadPage />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </div>
+          {/* Protected pages */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/upload"
+            element={
+              <ProtectedRoute>
+                <UploadPage />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
       </div>
     </div>
   );

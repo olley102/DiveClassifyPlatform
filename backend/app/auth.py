@@ -4,7 +4,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
-from . import crud
+from .crud import get_user
 from .database import get_db
 
 # JWT configuration
@@ -26,7 +26,7 @@ pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
 
 def authenticate_user(username: str, password: str, db: Session = Depends(get_db)):
     try:
-        user = crud.get_user(db, username=username)
+        user = get_user(db, username=username)
     except HTTPException as e:  # catch HTTPException from crud
         return False
     if not verify_password(password, user.hashed_password):
@@ -35,11 +35,6 @@ def authenticate_user(username: str, password: str, db: Session = Depends(get_db
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
-
-def get_password_hash(password: str) -> str:
-    if len(password.encode("utf-8")) > 72:
-        raise ValueError("Password must not exceed 72 bytes")
-    return pwd_context.hash(password)
 
 def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
     to_encode = data.copy()
@@ -66,7 +61,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     except JWTError:
         print("jwterror")
         raise credentials_exception
-    user = crud.get_user(username=username, db=db)
+    user = get_user(username=username, db=db)
     if user is None:
         print("user none error")
         raise credentials_exception

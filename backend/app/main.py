@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from .database import Base, engine, get_db
-from .routers import users, uploads, model_results
+from .routers import users, uploads
 from .schemas import Token
 from . import auth
 import logging
@@ -45,7 +45,6 @@ app.add_middleware(
 # Register routers
 app.include_router(users.router, prefix="/users", tags=["Users"])
 app.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
-app.include_router(model_results.router, prefix="/results", tags=["Model Results"])
 
 # Global exception handler
 from sqlalchemy.exc import SQLAlchemyError
