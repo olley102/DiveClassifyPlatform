@@ -1,18 +1,13 @@
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from .database import Base, engine, get_db
-from .routers import users, uploads
-from .schemas import Token
-from . import auth
+from .database import Base, engine
+from .routers import users, uploads, token
 import logging
 from contextlib import asynccontextmanager
-from datetime import timedelta
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -44,6 +39,7 @@ app.add_middleware(
 )
 
 # Register routers
+app.include_router(token.router)
 app.include_router(users.router, prefix="/users", tags=["Users"])
 app.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
 app.mount("/files", StaticFiles(directory="app/uploads"), name="files")
@@ -63,18 +59,3 @@ async def pydantic_validation_exception_handler(request, exc):
         field = err["loc"][-1]
         errors[field] = err["msg"].replace("Value error, ", "")
     return JSONResponse(status_code=422, content={"errors": errors})
-
-@app.post("/token", response_model=Token)  # TODO: move to auth and make auth a router
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = auth.authenticate_user(form_data.username, form_data.password, db)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
-    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = auth.create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
