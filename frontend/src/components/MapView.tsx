@@ -12,11 +12,15 @@ interface Upload {
   notes?: string;
 }
 
-const MapView = () => {
+interface MapViewProps {
+  url?: string;
+}
+
+const MapView = ({ url = "/uploads" }: MapViewProps) => {
   const [uploads, setUploads] = useState<Upload[]>([]);
 
   useEffect(() => {
-    api.get('/uploads/').then(res => setUploads(res.data));
+    api.get(url).then(res => setUploads(res.data));
   }, []);
 
   return (

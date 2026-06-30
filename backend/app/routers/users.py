@@ -38,6 +38,10 @@ def get_users(
         raise HTTPException(status_code=403, detail="Admin access required")
     return crud.list_users(db, skip=skip, limit=limit)
 
+@router.get("/me", response_model=schemas.User)
+def get_me(current_user: schemas.User = Depends(get_current_user)):
+    return current_user
+
 @router.get("/{username}", response_model=schemas.User)
 def get_user(username: str, db: Session = Depends(get_db)):
     return crud.get_user(db, username=username)

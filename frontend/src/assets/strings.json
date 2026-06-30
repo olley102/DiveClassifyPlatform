@@ -1,5 +1,6 @@
 {
-    "appName": "Ocean Classify",
-    "signupTitle": "Sign Up",
-    "loginTitle": "Login"
+  "appName": "OceanClassify",
+  "appTagline": "Citizen science for marine habitat monitoring",
+  "signupTitle": "Join OceanClassify",
+  "loginTitle": "Sign In"
 }

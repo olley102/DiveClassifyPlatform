@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
-from .. import crud, schemas
+from .. import crud, schemas, models
 from ..utils.ai_processing import classify_image
 from ..database import get_db
 from ..auth import get_current_user
@@ -74,19 +74,42 @@ def create_upload(
     db_upload = crud.create_upload(db, upload=upload_data)
     return db_upload
 
-def run_classification(upload_id: int, file_path: str, db: Session = Depends(get_db)):
+def get_owned_upload(upload_id: int, db: Session, current_user: schemas.User):
+    upload = crud.get_upload(db, upload_id=upload_id)
+    if not (upload.user_id == current_user.id or current_user.role == models.UserRole.ADMIN):
+        raise HTTPException(status_code=403, detail="Not authorised to modify this upload")
+    return upload
+
+@router.put("/{upload_id}/label", response_model=schemas.Upload)
+def set_label(
+    upload_id: int,
+    label: str,
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(get_current_user)
+):
+    upload = get_owned_upload(upload_id, db, current_user)
+    label_data = schemas.UpdateUploadLabel(
+        filename=upload.filename,
+        label_type="user_defined",
+        label=label
+    )
+    return crud.update_upload_label(db, upload_id=upload_id, upload_data=label_data)
+
+@router.put("/{upload_id}/classify", response_model=schemas.Upload)
+def classify_upload(
+    upload_id: int,
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(get_current_user)
+):
+    upload = get_owned_upload(upload_id, db, current_user)
+    file_path = UPLOAD_DIR / upload.storage_filename
     result = classify_image(file_path)
     result_data = schemas.UpdateUploadLabel(
+        filename=upload.filename,
         label_type="model_defined",
         **result
     )
     return crud.update_upload(db, upload_id=upload_id, upload=result_data)
-
-@router.put("/{upload_id}/classify", response_model=schemas.Upload)
-def classify_upload(upload_id: int, db: Session = Depends(get_db)):
-    upload = crud.get_upload(db, upload_id=upload_id)
-    file_path = UPLOAD_DIR / upload.storage_filename
-    return run_classification(upload_id=upload_id, file_path=file_path, db=db)
 
 @router.get("/", response_model=list[schemas.Upload])
 def list_uploads(skip: int = 0, limit: int = 20, user_id: int = None, db: Session = Depends(get_db)):

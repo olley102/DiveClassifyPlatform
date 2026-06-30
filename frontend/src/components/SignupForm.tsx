@@ -5,11 +5,12 @@ import strings from "../assets/strings.json";
 import colors from "../assets/colors.json";
 import type React from "react";
 
-type FieldNames = "name" | "username" | "email" | "password";
+type FieldNames = "name" | "username" | "email" | "affiliation" | "password";
 
 interface SignupFormData {
   name: string;
   username: string;
+  affiliation: string;
   email: string;
   password: string;
 }
@@ -39,6 +40,7 @@ const SignupForm = () => {
       console.log("Response:", response);
       alert("User created successfully!");
       reset();
+      navigate("/login");
     } catch (error: any) {
       console.error("Signup error:", error);
 
@@ -60,6 +62,7 @@ const SignupForm = () => {
   const fields: { name: FieldNames; label: string; type: string; required?: boolean }[] = [
     { name: "name", label: "Full Name", type: "text", required: true },
     { name: "username", label: "Username", type: "text", required: true },
+    { name: "affiliation", label: "Affiliation (optional)", type: "text", required: false },
     { name: "email", label: "Email Address", type: "email", required: true },
     { name: "password", label: "Password", type: "password", required: true },
   ];

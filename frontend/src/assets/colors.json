@@ -1,12 +1,13 @@
 {
-  "primary": "#1D4ED8",
-  "primaryHover": "#2563EB",
-  "primaryLight": "#3B82F6",
-  "primaryDark": "#1E40AF",
-  "background": "#E5E7EB",
-  "cardBackground": "#F9FAFB",
-  "textPrimary": "#111827",
-  "textSecondary": "#4B5563",
+  "primary": "#0E7490",
+  "primaryHover": "#0C6478",
+  "primaryLight": "#0891B2",
+  "primaryDark": "#164E63",
+  "background": "#F0FDFA",
+  "cardBackground": "#F8FFFE",
+  "textPrimary": "#0F172A",
+  "textSecondary": "#475569",
   "error": "#DC2626",
-  "success": "#16A34A"
+  "success": "#059669",
+  "flagged": "#D97706"
 }

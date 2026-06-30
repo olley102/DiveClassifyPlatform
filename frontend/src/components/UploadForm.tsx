@@ -10,7 +10,11 @@ interface UploadFormData {
   lon: string;
 }
 
-const UploadForm = () => {
+interface UploadFormProps {
+  onSuccess?: () => void;
+}
+
+const UploadForm = ({ onSuccess }: UploadFormProps) => {
   const {
     register,
     handleSubmit,
@@ -37,6 +41,7 @@ const UploadForm = () => {
 
       setSuccessMessage("Upload successful!");
       reset();
+      onSuccess?.();
     } catch (error: any) {
       console.error("Upload error:", error);
       setUploadError("Upload failed. Please try again.");
@@ -74,7 +79,7 @@ const UploadForm = () => {
           className="w-full border rounded-lg px-3 py-2 focus:outline-none"
           style={{
             borderColor: errors.file ? colors.error : colors.primaryLight,
-            backgroundColor: "#fff",
+            backgroundColor: colors.cardBackground
           }}
         />
         {errors.file && (
@@ -105,7 +110,7 @@ const UploadForm = () => {
             style={{
               color: colors.textSecondary,
               borderColor: errors[name] ? colors.error : colors.primaryLight,
-              backgroundColor: "#fff",
+              backgroundColor: colors.cardBackground
             }}
           />
           {errors[name] && (

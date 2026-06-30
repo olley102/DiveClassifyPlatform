@@ -18,8 +18,7 @@ const LoginButton = () => {
   return (
     <button
       onClick={handleLogin}
-      className="p-2 rounded-md hover:bg-gray-100 transition-colors"
-      style={{ color: colors.textSecondary }}
+      className="p-2 rounded-md text-white hover:bg-[#fff]/15 transition-colors"
     >
       <p>Login</p>
     </button>
@@ -35,8 +34,7 @@ const SignupButton = () => {
   return (
     <button
       onClick={handleSignup}
-      className="p-2 rounded-md hover:bg-gray-100 transition-colors"
-      style={{ color: colors.textSecondary }}
+      className="p-2 rounded-md text-white hover:bg-[#fff]/15 transition-colors"
     >
       <p>Sign Up</p>
     </button>
@@ -53,8 +51,7 @@ const LogoutButton = () => {
   return (
     <button
       onClick={handleLogout}
-      className="p-2 rounded-md hover:bg-red-100 transition-colors"
-      style={{ color: colors.error }}
+      className="p-2 rounded-md text-white hover:bg-[#fff]/15 transition-colors"
     >
       <p>Logout</p>
     </button>
@@ -69,27 +66,24 @@ const TitleButton = () => {
   }
 
   return (
-    <button
-      onClick={handleHome}
-      className="p-1"
-    >
-      <h1
-        className="text-3xl font-extrabold"
-        style={{ color: colors.primary }}
-      >
+    <button onClick={handleHome} className="p-1 text-left">
+      <h1 className="text-2xl font-extrabold leading-tight" style={{ color: "#fff" }}>
         {strings.appName}
       </h1>
+      <p className="text-xs font-medium opacity-75" style={{ color: "#fff" }}>
+        {strings.appTagline}
+      </p>
     </button>
   )
 }
 
 function App() {
   return (
-    <div className="w-full h-screen flex flex-col overflow-hidden">
+    <div className="w-full h-screen flex flex-col overflow-hidden" style={{ backgroundColor: colors.background }}>
       {/* Header with app name + nav buttons */}
       <div
         className="flex items-center justify-between px-6 py-4 flex-none shadow-lg"
-        style={{ backgroundColor: colors.cardBackground }}
+        style={{ backgroundColor: colors.primary }}
       >
         <div className="flex-none">
           <TitleButton />
@@ -106,7 +100,7 @@ function App() {
       </div>
     
       {/* Routes container */}
-      <div className="w-full flex-1 min-h-0 flex flex-col justfiy-center items-center">
+      <div className="w-full flex-1 min-h-0 flex flex-col justfiy-center items-center overflow-auto">
         <Routes>
           <Route path="/" element={ <Navigate to="/map" />} />
           <Route path="/map" element={ <MapPage /> } />

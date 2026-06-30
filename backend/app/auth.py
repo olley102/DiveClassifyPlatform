@@ -16,7 +16,7 @@ SECRET_KEY = "651150012ad5102f030364013e22f00250d203f6f1bc721beb9c719b34f49f0c"
 # SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
 
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 480
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")

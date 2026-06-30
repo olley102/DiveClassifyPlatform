@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
@@ -45,6 +46,7 @@ app.add_middleware(
 # Register routers
 app.include_router(users.router, prefix="/users", tags=["Users"])
 app.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
+app.mount("/files", StaticFiles(directory="app/uploads"), name="files")
 
 # Global exception handler
 from sqlalchemy.exc import SQLAlchemyError
